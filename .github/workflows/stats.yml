@@ -1,0 +1,46 @@
+name: Refresh public statistics
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 10 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: public-statistics
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - run: npm run stats:build
+      - name: Publish only generated public summaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist/stats
+          git init -b stats-data
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          gh auth setup-git
+          if git ls-remote --exit-code origin refs/heads/stats-data >/dev/null; then
+            git fetch --depth=1 origin stats-data
+            git reset --mixed FETCH_HEAD
+          fi
+          git add --all
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Refresh public recent-form summaries'
+          git push origin HEAD:refs/heads/stats-data

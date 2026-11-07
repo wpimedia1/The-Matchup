@@ -53,13 +53,13 @@ Only explicit public application routes and allowlisted image/font files from `p
 | `GET /api/:league/events/:id/props?region=us&markets=player_points` | Allowlisted league-specific prop markets |
 | `POST /api/:league/averages` | JSON `{ players, markets, teams: [awayTeam, homeTeam], before: ISODate }` |
 
-The odds endpoints return `{ data, usage: { last }, fetchedAt }`. Averages return results with available game counts, source dates, source name, and partial-coverage status. Only large public statistics files are cached in memory for one hour; odds calls preserve the original user-triggered behavior.
+The odds endpoints return `{ data, usage: { last }, fetchedAt }`. Averages return results with available game counts, source dates, source name, and partial-coverage status. Public statistics are cached for one hour; odds calls preserve the original user-triggered behavior. On Cloudflare, a daily GitHub workflow prepares small public team summaries; the Node backend processes season files directly.
 
 ## Hosting
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for Node/container deployment, secrets, the planned domain, and Cloudflare compatibility. GitHub hosts the source repository; GitHub Pages cannot run this Node backend.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Cloudflare Workers, Node/container deployment, secrets, and the planned domain. GitHub hosts the source repository; GitHub Pages cannot run the API backend.
 
-Use a Node-capable host, not a static-only file host. Start command: `npm start`; set `HOST=0.0.0.0`, the host's assigned `PORT`, and secret `ODDS_API` in the host's environment settings. Put the app behind the hosting platform's HTTPS endpoint and preserve the original Host header through any reverse proxy. Never configure a web server to serve this project's root directory. No deployment has been performed.
+Cloudflare uses `npm run deploy` with `ODDS_API` in the Worker's runtime secret store. The static build copies only allowlisted public files. For Node hosting, use `npm start`; set `HOST=0.0.0.0`, the host's assigned `PORT`, and secret `ODDS_API` in the host's environment settings. Put the app behind HTTPS and preserve the original Host header through any reverse proxy. Never serve this project's root directory.
 
 No sign-in or database is required for this public read-only site. Manual averages are local to each visitor's browser. Public server access is deliberate; cross-site browser checks are not authentication.
 

@@ -52,11 +52,46 @@ Cloudflare Pages Functions can execute backend code in the Workers runtime.
 Cloudflare Workers with Static Assets supports the frontend and API in one
 deployment and is the recommended Cloudflare target for this project.
 
-The current entrypoint is a Node HTTP server, not a deployable Worker. It needs
-a Workers request adapter and asset binding, and the game-log implementation
-needs memory/CPU validation for the Workers runtime. Do not deploy `public/`
-alone and expect `/api/*` to work. Store `ODDS_API` as a Cloudflare secret when
-that adapter is added; never bake it into a static build.
+`wrangler.jsonc` deploys `worker/index.js` and an allowlisted static build. The
+Worker and Node server share API validation and credential handling. Requests
+to `/api/*` run the Worker; other requests use the static asset binding. Security
+headers apply to both. The build deletes stale output before copying public files.
+
+```sh
+npm ci --ignore-scripts
+npm run check:cloudflare
+npm run deploy
+```
+
+For Git integration, select `wpimedia1/The-Matchup`, production branch `main`,
+root directory `/`, and deploy command `npm run deploy`. Wrangler's build hook
+runs `npm run build:cloudflare`; no separate build command is required. Disable
+preview builds to keep production credentials away from unreviewed branches.
+Use the assigned `workers.dev` hostname until the custom domain is ready.
+
+Set `ODDS_API` under **Worker Settings → Variables and Secrets** with type
+**Secret**, then deploy the setting. This is a runtime secret, not a build
+variable. GitHub Actions and Cloudflare build commands do not need the key.
+For local Worker development, use the ignored `.dev.vars` or `.env`, then run
+`npm run dev:cloudflare`. Never commit either credentials file.
+
+### Public statistics refresh
+
+The protected-main `Refresh public statistics` workflow runs daily at 10:41 UTC
+and can be triggered manually. It downloads the same public game logs used by
+the Node backend and publishes compact team summaries to `stats-data`. It uses
+only GitHub's job token, with write permission confined to the publishing job;
+it has no odds or Cloudflare credentials. The runtime fetches only summaries
+for the selected teams, caching them for one hour. This keeps season-file
+processing outside Cloudflare request memory and CPU budgets.
+
+Run the workflow once before serving live averages. Failed or partial source
+downloads leave the previous branch intact. Summaries older than 48 hours are
+rejected; source dates and available game counts remain in API responses. A
+requested game date earlier than a player's newest summarized game returns a
+blank average rather than including later results. The Node backend continues
+calculating directly from season files. Neither path polls the odds provider
+or adds application usage limits.
 
 References: [Pages Functions](https://developers.cloudflare.com/pages/functions/),
 [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/),
