@@ -29,6 +29,7 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run security:check
+      - run: npm run check:cloudflare
   container:
     name: Container
     runs-on: ubuntu-latest

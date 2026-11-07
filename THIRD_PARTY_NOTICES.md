@@ -28,5 +28,7 @@ not an additional grant of trademark or photograph rights.
 
 Live odds require a separate The Odds API account and are subject to that
 provider's terms. Public statistics come from SportsDataverse / hoopR and
-nflverse. No live data archive or provider credentials are distributed here.
+nflverse. The generated `stats-data` branch contains derived public recent-form
+summaries with source attribution and dates, subject to the source providers'
+data rights. No live odds archive or provider credentials are distributed here.
 Sample fixtures and averages are illustrative and are identified in the UI.

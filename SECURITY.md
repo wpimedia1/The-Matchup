@@ -33,6 +33,15 @@ release. The supplied container runs as an unprivileged user; Compose adds a
 read-only filesystem, drops capabilities, and binds to loopback for a local
 TLS reverse proxy. Do not enable request URL/body logging that captures secrets.
 
+Cloudflare uses an allowlisted static build and a Worker with a runtime secret.
+Builds and pull requests never receive `ODDS_API`. Automatic preview builds
+should remain disabled. Worker observability is disabled to avoid collecting
+request data by default. Daily public-statistics preprocessing runs from main,
+publishes only derived public summaries, and requires no production secrets.
+The publishing job alone receives a write-capable GitHub token; other jobs
+retain read-only permissions. Runtime statistics downloads use a fixed HTTPS
+repository origin and validated team paths, rejecting redirects and stale data.
+
 If a credential is ever committed, revoke/rotate it immediately. Deleting it
 from the newest revision does not remove it from history or clones.
 

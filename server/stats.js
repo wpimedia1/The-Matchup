@@ -20,7 +20,7 @@ export function parseCSV(text) {
   const headers = rows.shift() || [];
   return rows.map(values => Object.fromEntries(headers.map((header, i) => [header.trim(), values[i] ?? ''])));
 }
-const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+export const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   .toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+(jr|sr|ii|iii|iv)$/, '').replace(/\s+/g, ' ').trim();
 function numeric(row, ...keys) {
   for (const key of keys) {
@@ -92,7 +92,7 @@ async function download(url, fetchImpl) {
   if (!response.ok) throw new Error('Stats source unavailable');
   return response;
 }
-async function loadRows(league, fetchImpl) {
+export async function loadRows(league, fetchImpl = fetch) {
   const now = new Date(), year = now.getUTCFullYear();
   let urls, source;
   if (league.id === 'nba') {
