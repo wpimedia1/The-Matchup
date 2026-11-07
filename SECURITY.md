@@ -45,3 +45,14 @@ container references. `npm run security:check` scans the Git index, rejects
 credential files, checks high-confidence token patterns, and compares staged
 content against local `.env` secret values without printing them. This is an
 additional guard, not a guarantee that every possible secret format is detected.
+
+## Asset maintenance utility
+
+`scripts/fetch-design-assets.mjs` is an explicit developer utility, not an API
+endpoint or install hook, and is not included in the runtime container. It
+intentionally writes downloaded images/fonts and JSON-escaped identity/source
+metadata. Downloads are restricted to specific HTTPS ESPN CDN and Google Fonts
+paths, reject redirects, validate local filenames and player IDs, enforce a
+10 MiB asset bound, and verify image/font signatures. Network-to-file findings
+for these intended writes should be reviewed in this context, not suppressed
+globally. This asset size bound does not change API usage controls.

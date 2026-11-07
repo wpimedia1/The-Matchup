@@ -6,12 +6,28 @@ const base = new URL('../public/assets/', import.meta.url);
 setDefaultResultOrder('ipv4first');
 await mkdir(base, { recursive: true });
 async function download(url, filename) {
+  if (!/^[a-z0-9-]+\.(png|ttf|txt)$/.test(filename)) throw new Error('Invalid asset filename.');
+  const source = new URL(url);
+  const allowedSource = source.protocol === 'https:' && !source.username && !source.password && !source.port &&
+    ((source.hostname === 'a.espncdn.com' && /^\/i\/(teamlogos|headshots)\//.test(source.pathname)) ||
+     (source.hostname === 'raw.githubusercontent.com' && source.pathname.startsWith('/google/fonts/main/ofl/')));
+  if (!allowedSource) throw new Error('Asset source is not allowlisted.');
   try { await access(new URL(filename, base)); return; } catch {}
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(25000) });
+      const response = await fetch(source, { signal: AbortSignal.timeout(25000), redirect: 'error' });
       if (!response.ok) throw new Error(`Asset download failed: ${filename} (${response.status})`);
-      await writeFile(new URL(filename, base), Buffer.from(await response.arrayBuffer())); return;
+      const chunks = []; let length = 0;
+      for await (const chunk of response.body) {
+        length += chunk.byteLength;
+        if (length > 10 * 1024 * 1024) throw new Error('Asset exceeds the download size limit.');
+        chunks.push(chunk);
+      }
+      const bytes = Buffer.concat(chunks);
+      if (filename.endsWith('.png') && !bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error('Invalid PNG asset.');
+      if (filename.endsWith('.ttf') && !bytes.subarray(0, 4).equals(Buffer.from([0,1,0,0]))) throw new Error('Invalid TrueType font.');
+      if (filename.endsWith('.txt') && !bytes.toString('utf8').includes('SIL OPEN FONT LICENSE')) throw new Error('Invalid font license.');
+      await writeFile(new URL(filename, base), bytes, { flag: 'wx' }); return;
     } catch (error) { if (attempt === 2) throw error; }
   }
 }
@@ -44,6 +60,7 @@ for (const [league, sport, team] of [['nfl', 'football', 'buf'], ['nfl', 'footba
   for (const athlete of athletes.filter(a => wanted.includes(a.fullName) || wanted.includes(a.displayName))) {
     const name = wanted.includes(athlete.displayName) ? athlete.displayName : athlete.fullName;
     if (!athlete.headshot?.href) continue;
+    if (!/^\d{1,12}$/.test(String(athlete.id))) throw new Error('Invalid player asset identifier.');
     const file = `player-${league}-${athlete.id}.png`;
     await download(athlete.headshot.href, file);
     people[name] = { name, photo: `/assets/${file}`, position: athlete.position?.abbreviation || '', team: team.toUpperCase() };

@@ -96,8 +96,12 @@ export function createApp({ apiKey = '', fetchImpl = fetch, averagesImpl = loadA
       let markets;
       if (action.includes('/props')) markets = checkMarkets(league, (url.searchParams.get('markets') || '').split(','));
       if (!apiKey) throw new HttpError(503, 'Live data is not configured on the server. Sample mode is available.');
-      const endpoint = action === 'events' ? 'events' : action === 'odds' ? 'odds' : `events/${match[3]}/odds`;
-      const upstream = new URL(`https://api.the-odds-api.com/v4/sports/${league.sport}/${endpoint}`);
+      const endpoint = action === 'events' ? 'events' : action === 'odds' ? 'odds' : `events/${encodeURIComponent(match[3])}/odds`;
+      // Construct the trusted origin independently of every request-derived value.
+      // Assigning a pathname cannot replace the URL's scheme, host, or authority.
+      const upstream = new URL('https://api.the-odds-api.com');
+      const sport = match[1] === 'nba' ? 'basketball_nba' : 'americanfootball_nfl';
+      upstream.pathname = `/v4/sports/${sport}/${endpoint}`;
       upstream.searchParams.set('apiKey', apiKey);
       if (action !== 'events') {
         upstream.searchParams.set('regions', region);

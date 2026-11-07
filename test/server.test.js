@@ -46,6 +46,7 @@ test('proxies allowlisted leagues, regions and markets with server-only credenti
   assert.equal(calls.at(-1).url.searchParams.get('apiKey'), 'test-secret-never-public');
   assert.equal(calls.at(-1).url.searchParams.get('markets'), 'player_points,player_rebounds');
   assert.equal(calls.at(-1).init.redirect, 'error');
+  for (const call of calls) assert.equal(call.url.origin, 'https://api.the-odds-api.com');
 });
 test('rejects unexpected endpoints, query injection, cross-site calls and wrong methods before forwarding', async t => {
   const { get, calls } = await fixture(t);
@@ -54,6 +55,11 @@ test('rejects unexpected endpoints, query injection, cross-site calls and wrong 
     assert.equal((await get(path)).status, 400, path);
   }
   assert.equal((await get('/api/mlb/events')).status, 404);
+  for (const path of ['/api/nba/events/https:%2f%2fevil.example/props?markets=player_points',
+    '/api/nba/events/..%2f..%2fother/props?markets=player_points',
+    '/api/nba/events/evil.example@internal/props?markets=player_points']) {
+    assert.equal((await get(path)).status, 404);
+  }
   assert.equal((await get('/api/nba/odds', { method: 'POST' })).status, 405);
   assert.equal((await get('/api/nba/events', { headers: { Origin: 'https://attacker.example' } })).status, 403);
   assert.equal((await get('/api/nba/events', { headers: { 'Sec-Fetch-Site': 'cross-site' } })).status, 403);
