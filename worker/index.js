@@ -9,7 +9,7 @@ export async function loadSnapshotAverages(league, request, fetchImpl = fetch) {
     // Repository, branch, and origin are fixed; team is selected from the league allowlist.
     const url = new URL('https://raw.githubusercontent.com');
     url.pathname = `/wpimedia1/The-Matchup/stats-data/${league.id}/${encodeURIComponent(team)}.json`;
-    const response = await fetchImpl(url, { signal: AbortSignal.timeout(15000), redirect: 'error' });
+    const response = await fetchImpl(url, { signal: AbortSignal.timeout(15000), redirect: 'manual' });
     if (!response.ok) throw new HttpError(503, 'Recent averages are temporarily unavailable. Please try again later or enter an average manually.');
     const data = await response.json();
     // The published team summaries are small; do not retain raw season files here.

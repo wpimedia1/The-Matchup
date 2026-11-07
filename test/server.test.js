@@ -45,7 +45,7 @@ test('proxies allowlisted leagues, regions and markets with server-only credenti
   assert.equal(calls.at(-1).url.host, 'api.the-odds-api.com');
   assert.equal(calls.at(-1).url.searchParams.get('apiKey'), 'test-secret-never-public');
   assert.equal(calls.at(-1).url.searchParams.get('markets'), 'player_points,player_rebounds');
-  assert.equal(calls.at(-1).init.redirect, 'error');
+  assert.equal(calls.at(-1).init.redirect, 'manual');
   for (const call of calls) assert.equal(call.url.origin, 'https://api.the-odds-api.com');
 });
 test('rejects unexpected endpoints, query injection, cross-site calls and wrong methods before forwarding', async t => {

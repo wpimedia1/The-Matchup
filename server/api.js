@@ -81,7 +81,8 @@ export async function handleApi(request, { apiKey = '', fetchImpl = fetch, avera
       upstream.searchParams.set('oddsFormat', 'american');
     }
     let response;
-    try { response = await fetchImpl(upstream, { signal: AbortSignal.timeout(20000), redirect: 'error' }); }
+    // Workers supports manual redirects; non-2xx responses are rejected below.
+    try { response = await fetchImpl(upstream, { signal: AbortSignal.timeout(20000), redirect: 'manual' }); }
     catch { throw new HttpError(502, 'The odds provider could not be reached. Try again.'); }
     if (!response.ok) {
       const message = response.status === 401 || response.status === 403 ? 'The odds provider rejected the server credentials.' :
