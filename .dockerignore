@@ -1,0 +1,14 @@
+# Allowlist the build context. Secrets and repository history never enter it.
+**
+!package.json
+!package-lock.json
+!server/
+!server/**
+!public/
+!public/**
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+**/.env
+**/.env.*
+**/*.key
+**/*.pem

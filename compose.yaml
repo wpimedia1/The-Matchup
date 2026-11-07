@@ -1,0 +1,15 @@
+services:
+  the-matchup:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:4173:4173'
+    environment:
+      ODDS_API: ${ODDS_API:?Set ODDS_API in your environment or local .env}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

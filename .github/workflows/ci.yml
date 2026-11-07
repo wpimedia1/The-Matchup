@@ -1,0 +1,54 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    name: Tests (${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+      - run: npm run security:check
+  container:
+    name: Container
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker build --pull --tag the-matchup:ci .
+      - name: Verify unprivileged, read-only runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name matchup-test --read-only --cap-drop ALL --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=16m -p 127.0.0.1:4173:4173 the-matchup:ci
+          trap 'docker rm -f matchup-test' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/api/health > /tmp/health.json; then break; fi
+            sleep 1
+          done
+          node -e "const h = JSON.parse(require('node:fs').readFileSync('/tmp/health.json')); if (h.status !== 'ok' || h.configured !== false) process.exit(1)"
+          test "$(docker exec matchup-test id -u)" != '0'
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/.env)" = '404'
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/server/index.js)" = '404'

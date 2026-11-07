@@ -1,0 +1,27 @@
+.env
+.env.*
+!.env.example
+node_modules/
+*.log
+.cache/
+test-results/
+
+# Credentials, local tooling, and generated output
+**/.env
+**/.env.*
+!**/.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.p12
+*.pfx
+.wrangler/
+.codex/
+.agents/
+.vscode/
+coverage/
+dist/
+.DS_Store
+Thumbs.db
+New Text Document.txt

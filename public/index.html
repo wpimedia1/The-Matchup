@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NBA and NFL matchups, game lines, player props, and last-10 averages.">
+  <meta name="theme-color" content="#081b34">
+  <title>Against All Odds — Game Day Matchup Center</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to matchup center</a>
+  <header class="masthead">
+    <a class="wordmark" href="/" aria-label="Against All Odds home">AGAINST ALL ODDS</a>
+    <span class="masthead-title">GAME DAY MATCHUP CENTER</span>
+    <time id="edition-date"></time>
+    <details class="session-menu"><summary>Your session</summary><section class="quota-card" aria-labelledby="quota-title"><h2 id="quota-title">Your session</h2><div class="quota-numbers"><div><strong id="used">0</strong><span>Credits used</span></div><div><strong id="remaining">500</strong><span>Budget remaining</span></div></div><label>Monthly quota <input id="quota" type="number" min="1" step="1" value="500"></label><p>Local session estimate across both leagues. This is not your account balance.</p></section></details>
+  </header>
+  <nav class="league-nav" aria-label="Sport navigation"><div class="league-tabs"><button data-league="nba" aria-pressed="false">NBA</button><button data-league="nfl" class="active" aria-pressed="true">NFL</button></div><span id="league-kicker">NFL MATCHUP CENTER</span><button id="filters-toggle" class="nav-tool" aria-expanded="false" aria-controls="board-filters">Find a matchup</button></nav>
+  <section class="scoreboard" aria-label="Upcoming matchups"><div class="rail-label">UPCOMING<br>MATCHUPS<small id="game-count">SAMPLE DATA</small></div><div id="games" class="games" aria-live="polite"></div></section>
+  <div class="board-filters" id="board-filters" hidden><label><span>Search teams</span><input id="team-search" type="search" placeholder="Find a team or matchup…" autocomplete="off"></label><label><span>Game date</span><select id="date-filter" aria-label="Filter by game date"><option value="all">All dates</option></select></label><span id="board-updated">Times in your timezone</span></div>
+  <main id="main">
+    <section class="matchup-hero" aria-label="Selected matchup"><div class="stadium"><img id="stadium-image" src="/assets/stadium-nfl.png" alt=""><img id="league-logo" class="league-logo" src="/assets/nfl.png" alt="NFL"></div><div id="selected-matchup" class="matchup-versus"></div></section>
+    <section class="workspace">
+      <div class="control-bar"><div class="load-actions"><button class="button primary" id="load-odds" title="3 markets × 1 region">Load schedule + lines</button><button class="button outlined" id="load-events">Schedule only</button></div><div class="detail-actions"><label class="region-field">Region <select id="region" aria-label="Odds region"><option value="us">US</option><option value="us2">US 2</option><option value="uk">UK</option><option value="eu">EU</option><option value="au">AU</option></select></label><button id="load-props" class="button outlined" disabled>Load props</button><button id="load-averages" class="button outlined" disabled>Compute averages</button></div></div>
+      <div class="state-bar"><span class="mode-label" id="mode-label">SAMPLE DATA</span><p id="board-status" class="status" role="status" aria-live="polite"></p><button class="text-button" id="sample-mode">Sample data</button></div>
+      <div class="comparison-desk">
+        <section class="lines-section" aria-labelledby="lines-title"><h2 id="lines-title">GAME LINES</h2><div id="game-lines"></div><a class="explore-button" href="#props-section">EXPLORE MATCHUP</a><p class="line-note">Prices are paired with their exact line and bookmaker.</p></section>
+        <section id="props-section" class="props-section" aria-labelledby="props-title">
+          <div class="props-heading"><h2 id="props-title">PLAYER PROPS</h2><span id="market-cost" class="sr-only"></span><button id="player-filters-toggle" class="text-button" aria-expanded="false" aria-controls="player-filters">Player filters</button></div>
+          <h3 id="props-matchup" class="sr-only">Select a matchup</h3><p id="props-description" class="sr-only"></p>
+          <fieldset id="market-controls" disabled><legend class="sr-only">Prop markets</legend><div class="market-line"><span>MARKET</span><div class="market-pills" id="markets"></div></div></fieldset>
+          <div class="prop-toolbar" id="player-filters" hidden><label id="prop-search-label" hidden><span class="sr-only">Find a player</span><input id="player-search" type="search" placeholder="Find a player…" autocomplete="off"></label><label id="prop-side-label" hidden><span class="sr-only">Prop side</span><select id="prop-side" aria-label="Prop side"><option value="Over">Over / Yes</option><option value="Under">Under / No</option><option value="all">Both sides</option></select></label></div>
+          <div id="prop-results"></div><p id="props-status" class="status" role="status" aria-live="polite">Select a matchup and load props.</p>
+        </section>
+      </div>
+      <section class="methodology" aria-label="About the data"><p><strong>THE NUMBERS BEHIND THE MATCHUP</strong> Odds: The Odds API. Game logs: SportsDataverse / hoopR and nflverse.</p><p>Averages describe past performance. Manual averages are saved in this browser. Sample prices, rosters, and averages are illustrative.</p></section>
+    </section>
+  </main>
+  <footer><strong>AGAINST ALL ODDS</strong><span>Know the matchup. Own your perspective.</span><a href="#main">Back to matchup</a></footer>
+  <noscript><p>Enable JavaScript to use the matchup center.</p></noscript>
+</body>
+</html>

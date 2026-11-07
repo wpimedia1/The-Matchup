@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Against All Odds — NFL Dashboard</title>
+<style>
+:root{--ink:#1b1e22;--muted:#5b6470;--line:#dfe3e8;--accent:#0f5132;--danger:#b02a37;--panel:#f3f5f7}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45}
+.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 24px;border-bottom:2px solid var(--ink)}
+h1{font-size:24px;margin:0 0 4px;font-weight:700}
+.sub{margin:0;color:var(--muted);font-size:13.5px;max-width:640px}
+.quota{border:1px solid var(--line);background:var(--panel);padding:10px 14px;font-size:13.5px;min-width:230px}
+.quota label{display:block;margin-bottom:6px}
+.quota input{width:90px;padding:4px 6px;font-size:14px}
+.quota strong{font-size:17px}
+main{padding:20px 24px;max-width:1180px}
+section{margin-bottom:28px}
+h2{font-size:18px;margin:0 0 4px;font-weight:700}
+.hint{margin:0 0 12px;color:var(--muted);font-size:13px}
+.card{border:1px solid var(--line);padding:14px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.field input,.field select{padding:7px 9px;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.field input{width:280px}
+button{background:var(--accent);color:#fff;border:0;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer}
+button.ghost{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+.status{font-size:13px;color:var(--muted);margin-top:8px}
+.status.err{color:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;border-bottom:2px solid var(--ink)}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:var(--panel)}
+tr.sel td{background:#e7f0ea}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:var(--accent);font-weight:700}
+.neg{color:var(--danger);font-weight:700}
+.avg-in{width:76px;padding:4px 6px;font-size:13.5px}
+.pills{display:flex;gap:8px 14px;flex-wrap:wrap;font-size:13.5px;margin:8px 0}
+.pills label{display:flex;gap:5px;align-items:center}
+.cost{font-size:12.5px;color:var(--muted)}
+footer{padding:16px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<header class="top">
+<div>
+<h1>Against All Odds — NFL</h1>
+<p class="sub">Upcoming schedule with lines and money. Select a matchup for top props with each player's last-10 game average vs the prop line. Free tier budget: 500 credits/mo.</p>
+</div>
+<div class="quota" aria-label="Quota tracker">
+<label>Monthly quota <input id="q-quota" type="number" value="500" min="1"></label>
+<div>Used this session: <strong id="q-used">0</strong> <span class="cost">(est.)</span></div>
+<div>Remaining: <strong id="q-left">500</strong></div>
+</div>
+</header>
+<main>
+<section id="setup">
+<h2>1. Setup</h2>
+<p class="hint">Key stays in this page only, never written anywhere. Lines cost credits; schedule alone is free.</p>
+<div class="card">
+<div class="row">
+<label class="field">Odds API key<input id="in-key" type="password" placeholder="YOUR_API_KEY" autocomplete="off"></label>
+<label class="field">Region<select id="in-region"><option value="us" selected>us</option><option value="us2">us2</option><option value="uk">uk</option><option value="eu">eu</option><option value="au">au</option></select></label>
+<button id="btn-events">Load schedule (free)</button>
+<button id="btn-lines">Load schedule + lines (3 credits)</button>
+<button id="btn-sample" class="ghost">Use sample data (free)</button>
+</div>
+<div class="status" id="st-setup"></div>
+</div>
+</section>
+<section id="schedule">
+<h2>2. Upcoming schedule</h2>
+<p class="hint">Best price per side across returned books. Click a row to open matchup props.</p>
+<div class="card"><table id="tbl-sched">
+<thead><tr><th>Commence</th><th>Matchup</th><th class="num">Money (away / home)</th><th class="num">Spread</th><th class="num">Total</th></tr></thead>
+<tbody><tr><td colspan="5">No data yet — load the schedule above.</td></tr></tbody>
+</table></div>
+</section>
+<section id="detail">
+<h2>3. Matchup props</h2>
+<p class="hint">Pick up to 3 prop markets to protect the quota. Averages come from nflverse weekly stats on the web; any blank average accepts manual entry and is remembered.</p>
+<div class="card">
+<div class="row"><strong id="d-title">No matchup selected.</strong></div>
+<div class="pills" id="d-markets"></div>
+<div class="row">
+<button id="btn-props">Load props (cost = markets × 1 region)</button>
+<button id="btn-avgs" class="ghost">Compute last-10 averages (free, web)</button>
+</div>
+<div class="status" id="st-detail"></div>
+<div id="d-props"></div>
+</div>
+</section>
+</main>
+<footer>Costs: sport odds = markets × regions. Event odds = unique markets returned × regions. Markets discovery = 1. Scores = 1. Historical endpoints are blocked on the free plan. Last-10 averages: nflverse weekly player stats (current + prior season), fetched in-browser.</footer>
+<script>
+"use strict";
+const SPORT="americanfootball_nfl",HOST="https://api.the-odds-api.com";
+const PROP_DEFS=[
+["player_pass_yds","Pass yds","passing_yards"],["player_pass_tds","Pass TDs","passing_tds"],
+["player_rush_yds","Rush yds","rushing_yards"],["player_reception_yds","Rec yds","receiving_yards"],
+["player_receptions","Receptions","receptions"],["player_rush_reception_yds","Rush+Rec yds","rush_rec_yards"],
+["player_anytime_td","Anytime TD","anytime_td"],["player_pass_completions","Completions","completions"],
+["player_pass_attempts","Pass att","attempts"],["player_rush_attempts","Rush att","rush_attempts"]];
+const S={key:"",region:"us",events:[],sel:null,used:0,avgs:{},stats:null};
+try{S.avgs=JSON.parse(localStorage.getItem("aao_avgs")||"{}")}catch(e){S.avgs={}}
+const $=id=>document.getElementById(id);
+function setStatus(id,msg,err){const el=$(id);el.textContent=msg;el.classList.toggle("err",!!err)}
+function quota(n){S.used+=n;if(n>0){$("q-used").textContent=S.used;
+const q=Math.max(1,parseInt($("q-quota").value||"500",10));$("q-left").textContent=q-S.used}}
+$("q-quota").addEventListener("input",()=>{const q=Math.max(1,parseInt($("q-quota").value||"500",10));$("q-left").textContent=q-S.used});
+function fmtPrice(v){if(v==null)return"—";return v>0?"+"+v:""+v}
+function fmtTime(iso){try{return new Date(iso).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return iso}}
+async function api(path){const r=await fetch(HOST+path);if(!r.ok)throw new Error("HTTP "+r.status);
+const last=parseInt(r.headers.get("x-requests-last")||"0",10);quota(isNaN(last)?0:last);return r.json()}
+function bestPrice(books,mkey,name){let b=null;for(const bk of books||[])for(const m of bk.markets||[])if(m.key===mkey)for(const o of m.outcomes||[])if(o.name===name&&(b==null||o.price>b.price))b={price:o.price,point:o.point,book:bk.title};return b}
+function outcomeNames(books,mkey){const s=[];for(const bk of books||[])for(const m of bk.markets||[])if(m.key===mkey)for(const o of m.outcomes||[])if(!s.includes(o.name))s.push(o.name);return s}
+const SAMPLE=[
+{id:"s1",sport_key:SPORT,commence_time:new Date(Date.now()+864e5).toISOString(),home_team:"Kansas City Chiefs",away_team:"Buffalo Bills",bookmakers:[
+{key:"dk",title:"DraftKings",markets:[{key:"h2h",outcomes:[{name:"Buffalo Bills",price:130},{name:"Kansas City Chiefs",price:-150}]},{key:"spreads",outcomes:[{name:"Buffalo Bills",price:-110,point:3},{name:"Kansas City Chiefs",price:-110,point:-3}]},{key:"totals",outcomes:[{name:"Over",price:-110,point:47.5},{name:"Under",price:-110,point:47.5}]}]},
+{key:"fd",title:"FanDuel",markets:[{key:"h2h",outcomes:[{name:"Buffalo Bills",price:135},{name:"Kansas City Chiefs",price:-155}]},{key:"spreads",outcomes:[{name:"Buffalo Bills",price:-105,point:3},{name:"Kansas City Chiefs",price:-115,point:-3}]},{key:"totals",outcomes:[{name:"Over",price:-105,point:47.5},{name:"Under",price:-115,point:47.5}]}]}]},
+{id:"s2",sport_key:SPORT,commence_time:new Date(Date.now()+2*864e5).toISOString(),home_team:"Philadelphia Eagles",away_team:"Dallas Cowboys",bookmakers:[
+{key:"dk",title:"DraftKings",markets:[{key:"h2h",outcomes:[{name:"Dallas Cowboys",price:180},{name:"Philadelphia Eagles",price:-210}]},{key:"spreads",outcomes:[{name:"Dallas Cowboys",price:-110,point:5.5},{name:"Philadelphia Eagles",price:-110,point:-5.5}]},{key:"totals",outcomes:[{name:"Over",price:-110,point:49.5},{name:"Under",price:-110,point:49.5}]}]}]}];
+const SAMPLE_PROPS={"player_pass_yds":[{d:"P. Mahomes",o:[{n:"Over",p:-115,pt:272.5},{n:"Under",p:-105,pt:272.5}]},{d:"J. Allen",o:[{n:"Over",p:-110,pt:258.5},{n:"Under",p:-110,pt:258.5}]}],
+"player_anytime_td":[{d:"T. Kelce",o:[{n:"Yes",p:150},{n:"No",p:-190}]},{d:"J. Cook",o:[{n:"Yes",p:120},{n:"No",p:-150}]}]};
+function key(){const k=$("in-key").value.trim();if(!k){setStatus("st-setup","Enter your Odds API key first.",1);return null}S.key=k;S.region=$("in-region").value;return k}
+$("btn-sample").addEventListener("click",()=>{S.events=SAMPLE;S.sel=null;renderSched();setStatus("st-setup","Sample data loaded — no credits used.")});
+$("btn-events").addEventListener("click",async()=>{if(!key())return;setStatus("st-setup","Loading events (free)…");
+try{S.events=await api("/v4/sports/"+SPORT+"/events?apiKey="+S.key);S.sel=null;renderSched();setStatus("st-setup","Loaded "+S.events.length+" events. Events endpoint is free.")}catch(e){setStatus("st-setup","Events failed: "+e.message,1)}});
+$("btn-lines").addEventListener("click",async()=>{if(!key())return;setStatus("st-setup","Loading lines (3 credits: h2h,spreads,totals × 1 region)…");
+try{S.events=await api("/v4/sports/"+SPORT+"/odds?apiKey="+S.key+"&regions="+S.region+"&markets=h2h,spreads,totals&oddsFormat=american");S.sel=null;renderSched();setStatus("st-setup","Loaded "+S.events.length+" games with lines.")}catch(e){setStatus("st-setup","Odds failed: "+e.message+". On free plan, paid-only books are excluded.",1)}});
+function renderSched(){const tb=$("tbl-sched").querySelector("tbody");tb.innerHTML="";
+if(!S.events.length){tb.innerHTML='<tr><td colspan="5">No games returned.</td></tr>';return}
+for(const g of S.events){const tr=document.createElement("tr");tr.className="pick"+(S.sel===g.id?" sel":"");
+const names=outcomeNames(g.bookmakers,"h2h");let money="—",spread="—",total="—";
+if(g.bookmakers&&g.bookmakers.length){const parts=names.map(n=>{const b=bestPrice(g.bookmakers,"h2h",n);return b?n.split(" ").pop()+" "+fmtPrice(b.price):n});
+money=parts.join(" / ");
+const sp0=bestPrice(g.bookmakers,"spreads",g.away_team),sp1=bestPrice(g.bookmakers,"spreads",g.home_team);
+if(sp0&&sp1)spread=g.away_team.split(" ").pop()+" "+sp0.point+" ("+fmtPrice(sp0.price)+") / "+g.home_team.split(" ").pop()+" "+sp1.point+" ("+fmtPrice(sp1.price)+")";
+const o=bestPrice(g.bookmakers,"totals","Over"),u=bestPrice(g.bookmakers,"totals","Under");
+if(o&&u)total="O "+o.point+" ("+fmtPrice(o.price)+") / U "+u.point+" ("+fmtPrice(u.price)+")"}
+tr.innerHTML="<td>"+fmtTime(g.commence_time)+"</td><td><strong>"+g.away_team+" @ "+g.home_team+"</strong></td>"+
+'<td class="num">'+money+'</td><td class="num">'+spread+'</td><td class="num">'+total+"</td>";
+tr.addEventListener("click",()=>selectGame(g.id));tb.appendChild(tr)}}
+function selectGame(id){S.sel=id;const g=S.events.find(e=>e.id===id);if(!g)return;
+$("d-title").textContent=g.away_team+" @ "+g.home_team+" — "+fmtTime(g.commence_time);
+const box=$("d-markets");box.innerHTML="";
+PROP_DEFS.forEach((d,i)=>{const lab=document.createElement("label");const cb=document.createElement("input");
+cb.type="checkbox";cb.value=d[0];cb.checked=i<3;lab.appendChild(cb);lab.appendChild(document.createTextNode(" "+d[1]));box.appendChild(lab)});
+$("d-props").innerHTML="";setStatus("st-detail","Pick up to 3 markets, then Load props.")}
+function checkedMarkets(){return Array.from($("d-markets").querySelectorAll("input:checked")).map(c=>c.value)}
+$("btn-props").addEventListener("click",async()=>{const g=S.events.find(e=>e.id===S.sel);
+if(!g){setStatus("st-detail","Select a matchup row first.",1);return}
+const mk=checkedMarkets();if(!mk.length){setStatus("st-detail","Check at least one prop market.",1);return}
+setStatus("st-detail","Loading "+mk.length+" market(s) (up to "+mk.length+" credit(s))…");
+try{let data;
+if(g.id[0]==="s"){data={bookmakers:[{key:"sample",title:"SampleBook",markets:mk.filter(k=>SAMPLE_PROPS[k]).map(k=>({key:k,last_update:"",outcomes:SAMPLE_PROPS[k].flatMap(p=>p.o.map(o=>({name:o.n,description:p.d,price:o.p,point:o.pt})))}))}]}}
+else{if(!key())return;data=await api("/v4/sports/"+SPORT+"/events/"+g.id+"/odds?apiKey="+S.key+"&regions="+S.region+"&markets="+mk.join(",")+"&oddsFormat=american")}
+renderProps(g,data)}catch(e){setStatus("st-detail","Props failed: "+e.message,1)}});
+function groupProps(data){const out={};for(const bk of data.bookmakers||[])for(const m of bk.markets||[]){
+out[m.key]=out[m.key]||{};for(const o of m.outcomes||[]){const p=o.description||o.name;
+out[m.key][p]=out[m.key][p]||{};const side=o.name;
+out[m.key][p][side]=out[m.key][p][side]||{prices:[],point:o.point};
+out[m.key][p][side].prices.push({price:o.price,book:bk.title});
+if(o.point!=null)out[m.key][p][side].point=o.point}}return out}
+function renderProps(g,data){const grp=groupProps(data);const host=$("d-props");host.innerHTML="";
+const keys=Object.keys(grp);if(!keys.length){host.innerHTML="<p>No props returned for these markets.</p>";setStatus("st-detail","No data returned — no extra charge for missing markets.");return}
+setStatus("st-detail","Showing "+keys.length+" market(s). Enter or compute last-10 averages.");
+for(const k of keys){const def=PROP_DEFS.find(d=>d[0]===k);const h=document.createElement("h3");
+h.textContent=(def?def[1]:k);h.style.fontSize="15px";host.appendChild(h);
+const t=document.createElement("table");t.innerHTML="<thead><tr><th>Player</th><th>Side</th><th class='num'>Line</th><th class='num'>Best</th><th class='num'>Last-10 avg</th><th class='num'>Avg − line</th></tr></thead>";
+const tb=document.createElement("tbody");
+for(const p of Object.keys(grp[k]).sort())for(const side of Object.keys(grp[k][p])){
+const cell=grp[k][p][side];cell.prices.sort((a,b)=>b.price-a.price);const best=cell.prices[0];
+const tr=document.createElement("tr");const avgKey=S.sel+"|"+k+"|"+p;
+const saved=S.avgs[avgKey];
+tr.innerHTML="<td>"+p+"</td><td>"+side+"</td><td class='num'>"+(cell.point!=null?cell.point:"—")+"</td>"+
+"<td class='num'>"+fmtPrice(best.price)+" <span class='cost'>"+best.book+" ("+cell.prices.length+")</span></td>";
+const tdA=document.createElement("td");tdA.className="num";const inp=document.createElement("input");
+inp.className="avg-in";inp.type="number";inp.step="0.1";inp.min="0";inp.dataset.avgkey=avgKey;
+if(saved!=null&&saved!=="")inp.value=saved;tdA.appendChild(inp);tr.appendChild(tdA);
+const tdD=document.createElement("td");tdD.className="num";tr.appendChild(tdD);
+const upd=()=>{const v=parseFloat(inp.value);S.avgs[avgKey]=inp.value;
+try{localStorage.setItem("aao_avgs",JSON.stringify(S.avgs))}catch(e){}
+if(!isNaN(v)&&cell.point!=null&&(side==="Over"||side==="Under")){const d=v-cell.point;
+tdD.innerHTML='<span class="'+(d>0?"pos":"neg")+'">'+(d>0?"+":"")+d.toFixed(1)+"</span> "+(d>0?"Over lean":"Under lean")}
+else tdD.textContent="—"};
+inp.addEventListener("input",upd);upd();tb.appendChild(tr)}
+t.appendChild(tb);host.appendChild(t)}}
+const TEAM_ABBR={"Arizona Cardinals":"ARI","Atlanta Falcons":"ATL","Baltimore Ravens":"BAL","Buffalo Bills":"BUF","Carolina Panthers":"CAR","Chicago Bears":"CHI","Cincinnati Bengals":"CIN","Cleveland Browns":"CLE","Dallas Cowboys":"DAL","Denver Broncos":"DEN","Detroit Lions":"DET","Green Bay Packers":"GB","Houston Texans":"HOU","Indianapolis Colts":"IND","Jacksonville Jaguars":"JAX","Kansas City Chiefs":"KC","Las Vegas Raiders":"LV","Los Angeles Chargers":"LAC","Los Angeles Rams":"LAR","Miami Dolphins":"MIA","Minnesota Vikings":"MIN","New England Patriots":"NE","New Orleans Saints":"NO","New York Giants":"NYG","New York Jets":"NYJ","Philadelphia Eagles":"PHI","Pittsburgh Steelers":"PIT","San Francisco 49ers":"SF","Seattle Seahawks":"SEA","Tampa Bay Buccaneers":"TB","Tennessee Titans":"TEN","Washington Commanders":"WAS"};
+function norm(n){return(n||"").toLowerCase().replace(/[^a-z ]/g,"").trim()}
+function parseCSV(t){const lines=t.split(/\r?\n/);if(!lines.length)return[];const h=lines[0].split(",");
+return lines.slice(1).filter(l=>l.trim()).map(l=>{const c=l.split(",");const o={};h.forEach((k,i)=>o[k.trim()]=c[i]);return o})}
+async function loadStats(season){const u="https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_"+season+".csv";
+const r=await fetch(u);if(!r.ok)throw new Error("stats "+season+" HTTP "+r.status);return parseCSV(await r.text())}
+function statVal(r,field){const n=parseFloat(r[field]);if(!isNaN(n))return n;
+if(field==="rush_rec_yards")return(parseFloat(r.rushing_yards)||0)+(parseFloat(r.receiving_yards)||0);
+if(field==="anytime_td")return(parseFloat(r.rushing_tds)||0)+(parseFloat(r.receiving_tds)||0);
+if(field==="attempts")return parseFloat(r.attempts)||0;if(field==="rush_attempts")return parseFloat(r.carries)||0;return NaN}
+$("btn-avgs").addEventListener("click",async()=>{const g=S.events.find(e=>e.id===S.sel);
+if(!g){setStatus("st-detail","Select a matchup first.",1);return}
+const names=new Set();document.querySelectorAll("#d-props tbody tr td:first-child").forEach(td=>names.add(td.textContent));
+if(!names.size){setStatus("st-detail","Load props first, then compute averages.",1);return}
+setStatus("st-detail","Fetching web game logs (nflverse, free)…");
+try{const yr=new Date().getFullYear();let rows=[];try{rows=rows.concat(await loadStats(yr))}catch(e){}
+if(rows.length<200)rows=rows.concat(await loadStats(yr-1));
+const tabs=rows.filter(r=>r.season_type==="REG"||!r.season_type);
+const ab=[TEAM_ABBR[g.away_team],TEAM_ABBR[g.home_team]];
+let filled=0;for(const nm of names){const nl=norm(nm),last=nl.split(" ").pop();
+const cand=tabs.filter(r=>{const p=norm(r.player_display_name||r.player_name);return(p===nl||(p.endsWith(last)&&ab.includes((r.recent_team||"").trim())));});
+const seen={},games=[];for(const r of cand.sort((a,b)=>(b.season-a.season)||(b.week-a.week))){const wk=r.season+"-"+r.week;if(seen[wk])continue;seen[wk]=1;games.push(r)}
+const gp=games.slice(0,10);if(!gp.length)continue;
+document.querySelectorAll("#d-props input.avg-in").forEach(inp=>{const parts=inp.dataset.avgkey.split("|");
+if(parts[2]!==nm||inp.value!=="")return;const def=PROP_DEFS.find(d=>d[0]===parts[1]);if(!def)return;
+const vals=gp.map(r=>statVal(r,def[2])).filter(v=>!isNaN(v));if(!vals.length)return;
+inp.value=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);inp.dispatchEvent(new Event("input"));filled++})}
+setStatus("st-detail","Averages filled for "+filled+" of "+names.size+" players (last 10 incl. prior season). Blanks need manual entry.")}catch(e){setStatus("st-detail","Web stats failed: "+e.message+". Enter averages manually.",1)}});
+</script>
+</body>
+</html>
