@@ -43,8 +43,8 @@ export function renderMatchup(s) {
   $('league-logo').src = `/assets/${s.config.id}.png`; $('league-logo').alt = s.config.label;
   if (!game) {
     const a = node('div', 'hero-team empty'), b = node('div', 'hero-team empty'), center = node('div', 'hero-center');
-    a.append(image(`/assets/${s.config.id}.png`, s.config.label)); b.append(node('h2', '', 'YOUR GAME. YOUR ANGLE.'));
-    center.append(node('span', 'fixture-label', `${s.config.label} MATCHUP CENTER`), node('h1', '', 'PICK A MATCHUP'), node('p', 'match-state', 'FROM THE SCOREBOARD ABOVE'));
+    a.append(image(`/assets/${s.config.id}.png`, s.config.label)); b.append(node('p', 'team-name', 'YOUR GAME. YOUR ANGLE.'));
+    center.append(node('span', 'fixture-label', `${s.config.label} MATCHUP CENTER`), node('h2', 'matchup-title', 'PICK A MATCHUP'), node('p', 'match-state', 'FROM THE SCOREBOARD ABOVE'));
     host.append(a, center, b); $('props-matchup').textContent = 'Select a matchup'; $('props-description').textContent = 'Select a matchup and load props.';
     renderLines(s, null); return;
   }
@@ -55,13 +55,13 @@ export function renderMatchup(s) {
     const rgb = info.color.match(/[a-f\d]{2}/gi)?.map(v => parseInt(v, 16)) || [0,0,0];
     if (rgb[0] * .299 + rgb[1] * .587 + rgb[2] * .114 > 165) panel.classList.add('dark-ink');
     if (info.logo) panel.append(image(info.logo, `${name} logo`));
-    const heading = node('h2'); heading.append(node('span', '', info.city), node('span', '', info.name)); panel.append(heading);
+    const heading = node('p', 'team-name'); heading.append(node('span', '', info.city), node('span', '', info.name)); panel.append(heading);
     if (info.city.length > 10) heading.classList.add('long-city');
     if (info.name.length > 8) heading.classList.add('long-name');
     if (side === 'away') {
       const center = node('div', 'hero-center');
       center.append(node('p', 'fixture-label', `${s.config.label} · ${date(game.commence_time)}${s.sample ? ' · SAMPLE DATA' : ''}`),
-        node('h1', '', `${identity(game.away_team).name} AT ${identity(game.home_team).name}`), node('p', 'kickoff', time(game.commence_time)),
+        node('h2', 'matchup-title', `${identity(game.away_team).name} AT ${identity(game.home_team).name}`), node('p', 'kickoff', time(game.commence_time)),
         node('p', 'match-state', s.sample ? 'SAMPLE MATCHUP' : 'MATCHUP PREVIEW'));
       host.append(panel, center);
       if (`${identity(game.away_team).name} AT ${identity(game.home_team).name}`.length > 22) center.classList.add('long-fixture');

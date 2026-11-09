@@ -1,3 +1,4 @@
+import { PAGES, updatePageMetadata } from './site.js';
 import { LEAGUES } from './leagues.js';
 import { groupProps, price } from './domain.js';
 import { sampleEvents, sampleProps, SAMPLE_AVERAGES } from './sample.js';
@@ -18,7 +19,7 @@ const states = Object.fromEntries(Object.entries(LEAGUES).map(([key, config]) =>
   markets: config.markets.slice(0, 3).map(([market]) => market), playerSearch: '', side: 'Over', expandedMarkets: false, request: 0, propRequest: 0,
   loading: false, propsLoading: false, avgsLoading: false, status: '', error: false, propStatus: '', propError: false,
 }]));
-let active = states.nfl, used = 0, storage = {}, storageWarning = false;
+let active = states[document.body.dataset.league] || states.nfl, used = 0, storage = {}, storageWarning = false;
 try { storage = JSON.parse(localStorage.getItem('aao_combined_averages') || '{}'); if (!storage || typeof storage !== 'object' || Array.isArray(storage)) storage = {}; } catch { storage = {}; }
 
 function saveStorage() {
@@ -66,11 +67,12 @@ function resetDetail(state) {
 function leagueSwitch(key) {
   active = states[key];
   $('team-search').value = ''; $('region').value = active.region;
-  for (const tab of document.querySelectorAll('[data-league]')) {
+  for (const tab of document.querySelectorAll('a[data-league]')) {
     const selected = tab.dataset.league === key;
-    tab.classList.toggle('active', selected); tab.setAttribute('aria-pressed', String(selected));
+    tab.classList.toggle('active', selected);
+    if (selected) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
   }
-  document.title = `Against All Odds — ${active.config.label} Matchup Center`;
+  updatePageMetadata(key);
   $('league-kicker').textContent = `${active.config.label} MATCHUP CENTER`;
   if (!active.loaded) { loadSample(); return; }
   renderDates(); renderAll();
@@ -258,7 +260,17 @@ async function loadAverages() {
   finally { if (ticket === s.propRequest) { s.avgsLoading = false; if (active === s) renderProps(); } }
 }
 
-for (const tab of document.querySelectorAll('[data-league]')) tab.addEventListener('click', () => leagueSwitch(tab.dataset.league));
+for (const tab of document.querySelectorAll('a[data-league]')) tab.addEventListener('click', event => {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  const key = tab.dataset.league;
+  if (location.pathname !== PAGES[key].path) history.pushState(null, '', PAGES[key].path);
+  leagueSwitch(key);
+});
+window.addEventListener('popstate', () => {
+  const key = location.pathname === '/nba/' ? 'nba' : location.pathname === '/nfl/' ? 'nfl' : null;
+  if (key) leagueSwitch(key); else location.reload();
+});
 $('load-events').addEventListener('click', () => loadSchedule(false));
 $('load-odds').addEventListener('click', () => loadSchedule(true));
 $('sample-mode').addEventListener('click', loadSample);
@@ -277,7 +289,7 @@ $('region').addEventListener('change', () => {
   renderAll();
 });
 $('edition-date').textContent = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
-loadSample();
+leagueSwitch(active.config.id);
 api('/api/health').then(result => {
   if (!result.configured && !active.loaded && !active.loading) setStatus('board-status', 'Live data is not configured on the server. Explore sample data while setup is completed.', true);
 }).catch(() => { if (!active.loaded && !active.loading) setStatus('board-status', 'The server is unavailable. You can still explore sample data.', true); });

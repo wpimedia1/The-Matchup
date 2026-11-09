@@ -2,9 +2,9 @@
 
 Repository: https://github.com/wpimedia1/The-Matchup
 
-Planned production domain: `thematchup.app`. No DNS record or domain claim is
-created by this repository. Keep the frontend and `/api/*` on one HTTPS origin.
-The site's existing visible text does not need to change for deployment.
+Production domain: `https://the-matchup.app`. Keep the frontend and `/api/*` on
+one HTTPS origin. The root is a league-selection homepage; `/nba/` and `/nfl/`
+serve the interactive dashboards.
 
 ## Node hosting
 
@@ -41,7 +41,7 @@ capabilities, and a small temporary filesystem. Put a maintained TLS reverse
 proxy in front of it. If a managed host assigns ports directly, use the image
 with its own environment/port configuration instead of this local Compose map.
 
-Point `thematchup.app` to the chosen host only after its custom-domain setup
+Point `the-matchup.app` to the chosen host only after its custom-domain setup
 provides the required DNS records. Enable HTTPS, redirect HTTP, set HSTS at
 the edge, and preserve the public Host header through the proxy. Avoid adding
 a dangling DNS record before the hosting service is bound to the domain.
@@ -54,8 +54,10 @@ deployment and is the recommended Cloudflare target for this project.
 
 `wrangler.jsonc` deploys `worker/index.js` and an allowlisted static build. The
 Worker and Node server share API validation and credential handling. Requests
-to `/api/*` run the Worker; other requests use the static asset binding. Security
-headers apply to both. The build deletes stale output before copying public files.
+first run the Worker for canonical-host and path redirects, then `/api/*` uses
+the shared API handler and other requests use the static asset binding. This
+means static page requests also invoke the Worker under Cloudflare platform
+accounting. Security headers apply to both. The build deletes stale output before copying public files.
 
 ```sh
 npm ci --ignore-scripts
@@ -67,7 +69,13 @@ For Git integration, select `wpimedia1/The-Matchup`, production branch `main`,
 root directory `/`, and deploy command `npm run deploy`. Wrangler's build hook
 runs `npm run build:cloudflare`; no separate build command is required. Disable
 preview builds to keep production credentials away from unreviewed branches.
-Use the assigned `workers.dev` hostname until the custom domain is ready.
+Production uses `the-matchup.app`; `www.the-matchup.app` must also route to the
+Worker so it can redirect to the apex. The former production `workers.dev`
+hostname redirects permanently to the canonical domain. Disable version preview
+URLs in production so historical versions do not become duplicate public sites.
+Custom-domain bindings live in the Cloudflare dashboard and are not managed by
+this repository. The Node host relies on its HTTPS reverse proxy for protocol
+redirects; it does not trust arbitrary forwarded-protocol headers.
 
 Set `ODDS_API` under **Worker Settings → Variables and Secrets** with type
 **Secret**, then deploy the setting. This is a runtime secret, not a build

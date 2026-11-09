@@ -3,7 +3,7 @@
 [![CI](https://github.com/wpimedia1/The-Matchup/actions/workflows/ci.yml/badge.svg)](https://github.com/wpimedia1/The-Matchup/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/wpimedia1/The-Matchup/actions/workflows/codeql.yml/badge.svg)](https://github.com/wpimedia1/The-Matchup/actions/workflows/codeql.yml)
 
-Open-source project: **The Matchup**. Planned domain: **thematchup.app** (not yet connected). The site's existing visible branding is intentionally unchanged.
+Open-source project: **The Matchup**. Live site: **https://the-matchup.app**. Choose a league on the homepage, or open `/nba/` and `/nfl/` directly.
 
 A combined NBA / NFL matchup website built from the two supplied dashboards. The selected option 3 design uses a navy league bar, horizontal scoreboard, stadium panorama, team-color matchup hero, and game lines beside player props. It includes last-10 averages, manual averages, filters, and the original explicit-load usage controls.
 
@@ -29,8 +29,8 @@ The supplied `.env` has been preserved. Set environment variables directly on a 
 
 ## Using the desk
 
-- Switch between NBA and NFL. Each league retains its own board and selection during the session.
-- The initial view is the clearly labeled NFL sample matchup. Switching to an unopened league shows its sample board; no odds requests happen automatically.
+- Open NBA or NFL from the homepage. League navigation uses real URLs and retains each board, selection, and session estimate when switching inside the dashboard; browser Back/Forward is supported.
+- Each league opens its clearly labeled sample matchup; no odds requests happen automatically. The homepage loads no dashboard JavaScript and makes no API requests.
 - Load a schedule, or load schedule + lines. Nothing polls the odds provider automatically.
 - Use **Find a matchup** for team/date filters. Select a matchup, choose markets, and load props. **More markets** expands all available options. **Player filters** exposes player search and Over/Yes, Under/No, or both sides.
 - Each prop row compares prices at the **same player, market, side, and line**. Expand the price to see all returned bookmakers. Game-board quotes retain their exact line and bookmaker; hover a quote for attribution.
@@ -57,7 +57,7 @@ The odds endpoints return `{ data, usage: { last }, fetchedAt }`. Averages retur
 
 ## Hosting
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for Cloudflare Workers, Node/container deployment, secrets, and the planned domain. GitHub hosts the source repository; GitHub Pages cannot run the API backend.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Cloudflare Workers, Node/container deployment, secrets, and the production domain. GitHub hosts the source repository; GitHub Pages cannot run the API backend.
 
 Cloudflare uses `npm run deploy` with `ODDS_API` in the Worker's runtime secret store. The static build copies only allowlisted public files. For Node hosting, use `npm start`; set `HOST=0.0.0.0`, the host's assigned `PORT`, and secret `ODDS_API` in the host's environment settings. Put the app behind HTTPS and preserve the original Host header through any reverse proxy. Never serve this project's root directory.
 
@@ -86,3 +86,9 @@ The two original HTML files remain at the project root for reference. Their depr
 ## Open source
 
 Original code is [MIT licensed](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for image, font, trademark, and data attribution; those rights are not granted by the code license. Contributions are welcome through pull requests; see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+## Search and sharing
+
+The shared page renderer supplies unique titles, descriptions, canonical URLs, visible H1 headings, Open Graph/social-card metadata, and factual JSON-LD before JavaScript runs. `/robots.txt` references `/sitemap.xml`, which lists only the three public canonical pages. Unknown pages return a branded HTTP 404 with noindex; API errors stay JSON. `/.well-known/security.txt` points to private vulnerability reporting. See [SEO.md](SEO.md) for validation and Search Console setup.
+
+The original typographic social preview and raster icons can be regenerated with `python scripts/build-brand-assets.py` (developer-only dependency: Pillow). They are checked in; deployment does not require Python.

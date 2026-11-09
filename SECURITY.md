@@ -34,6 +34,11 @@ read-only filesystem, drops capabilities, and binds to loopback for a local
 TLS reverse proxy. Do not enable request URL/body logging that captures secrets.
 
 Cloudflare uses an allowlisted static build and a Worker with a runtime secret.
+Public vulnerability-reporting details are also available at
+`https://the-matchup.app/.well-known/security.txt`; renew its expiry before
+November 2027. Page structured data uses specific CSP hashes; unrestricted
+inline scripts remain disabled. API and error responses are marked `noindex`,
+which is a crawler instruction, not an access-control mechanism.
 Builds and pull requests never receive `ODDS_API`. Automatic preview builds
 should remain disabled. Worker observability is disabled to avoid collecting
 request data by default. Daily public-statistics preprocessing runs from main,

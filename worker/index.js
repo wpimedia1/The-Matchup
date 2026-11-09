@@ -1,5 +1,6 @@
 import { handleApi, HttpError } from '../server/api.js';
 import { resolveSnapshotAverages } from '../server/snapshots.js';
+import { redirectTarget } from '../server/routing.js';
 
 const snapshotCache = new Map();
 export async function loadSnapshotAverages(league, request, fetchImpl = fetch) {
@@ -20,7 +21,16 @@ export async function loadSnapshotAverages(league, request, fetchImpl = fetch) {
 }
 export default {
   async fetch(request, env) {
-    if (!new URL(request.url).pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+    const url = new URL(request.url), redirect = redirectTarget(url);
+    if (redirect) return new Response(null, { status: 308, headers: { Location: redirect, 'Strict-Transport-Security': 'max-age=31536000' } });
+    if (!url.pathname.startsWith('/api/')) {
+      const asset = await env.ASSETS.fetch(request);
+      // Preview/custom aliases must not create indexable copies of production.
+      if (asset.status !== 404 && url.hostname === 'the-matchup.app') return asset;
+      const response = new Response(asset.body, asset);
+      response.headers.set('X-Robots-Tag', 'noindex');
+      return response;
+    }
     const response = await handleApi(request, { apiKey: typeof env.ODDS_API === 'string' ? env.ODDS_API.trim() : '', averagesImpl: loadSnapshotAverages });
     response.headers.set('Strict-Transport-Security', 'max-age=31536000');
     return response;
