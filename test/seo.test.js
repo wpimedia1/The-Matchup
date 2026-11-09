@@ -71,9 +71,10 @@ test('canonical redirects preserve queries and methods without changing local ho
 
 test('Worker previews and missing assets are noindex without changing successful production pages', async () => {
   for (const [host, status, noindex] of [['the-matchup.app', 200, null], ['the-matchup.app', 404, 'noindex'], ['preview.the-matchup.app', 200, 'noindex']]) {
-    const response = await worker.fetch(new Request(`https://${host}/`), { ASSETS: { fetch: async () => new Response('page', { status }) } });
+    const response = await worker.fetch(new Request(`https://${host}/`), { ASSETS: { fetch: async () => new Response('page', { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } }) } });
     assert.equal(response.status, status);
     assert.equal(response.headers.get('x-robots-tag'), noindex);
+    assert.match(response.headers.get('cache-control'), /no-transform/);
     assert.equal(await response.text(), 'page');
   }
 });

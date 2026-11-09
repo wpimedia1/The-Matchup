@@ -39,6 +39,13 @@ neither measure is authentication. Secret-file protection remains server-side.
 No Search Console account, analytics tag, advertising code or verification token
 is installed by this release.
 
+Cloudflare HTML responses use `Cache-Control: no-transform` to prevent automatic
+edge injection of analytics beacons while retaining the site's CSP. This applies
+only to HTML; robots.txt and existing account crawler policies are unaffected.
+Stadium artwork is served as WebP to reduce download size; PNG originals remain
+available in the repository. Image dimensions are reserved, and the first
+homepage card is prioritized because it can be visible on mobile at first load.
+
 ## Verification and maintenance
 
 - Run `npm test` and `npm run check:cloudflare` before releasing.
