@@ -25,10 +25,13 @@ export default {
     if (redirect) return new Response(null, { status: 308, headers: { Location: redirect, 'Strict-Transport-Security': 'max-age=31536000' } });
     if (!url.pathname.startsWith('/api/')) {
       const asset = await env.ASSETS.fetch(request);
+      const html = asset.headers.get('content-type')?.startsWith('text/html');
       // Preview/custom aliases must not create indexable copies of production.
-      if (asset.status !== 404 && url.hostname === 'the-matchup.app') return asset;
+      if (!html && asset.status !== 404 && url.hostname === 'the-matchup.app') return asset;
       const response = new Response(asset.body, asset);
-      response.headers.set('X-Robots-Tag', 'noindex');
+      if (asset.status === 404 || url.hostname !== 'the-matchup.app') response.headers.set('X-Robots-Tag', 'noindex');
+      // Keep the delivered HTML free of automatic edge-injected analytics.
+      if (html) response.headers.set('Cache-Control', `${asset.headers.get('cache-control') || 'public, max-age=0, must-revalidate'}, no-transform`);
       return response;
     }
     const response = await handleApi(request, { apiKey: typeof env.ODDS_API === 'string' ? env.ODDS_API.trim() : '', averagesImpl: loadSnapshotAverages });

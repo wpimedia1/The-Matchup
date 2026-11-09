@@ -39,7 +39,7 @@ export function renderScoreboard(s, select, sample) {
 }
 export function renderMatchup(s) {
   const game = s.events.find(item => item.id === s.selected), host = $('selected-matchup'); host.replaceChildren();
-  $('stadium-image').src = `/assets/stadium-${s.config.id}.png`;
+  $('stadium-image').src = `/assets/stadium-${s.config.id}.webp`;
   $('league-logo').src = `/assets/${s.config.id}.png`; $('league-logo').alt = s.config.label;
   if (!game) {
     const a = node('div', 'hero-team empty'), b = node('div', 'hero-team empty'), center = node('div', 'hero-center');

@@ -92,3 +92,7 @@ Original code is [MIT licensed](LICENSE). See [third-party notices](THIRD_PARTY_
 The shared page renderer supplies unique titles, descriptions, canonical URLs, visible H1 headings, Open Graph/social-card metadata, and factual JSON-LD before JavaScript runs. `/robots.txt` references `/sitemap.xml`, which lists only the three public canonical pages. Unknown pages return a branded HTTP 404 with noindex; API errors stay JSON. `/.well-known/security.txt` points to private vulnerability reporting. See [SEO.md](SEO.md) for validation and Search Console setup.
 
 The original typographic social preview and raster icons can be regenerated with `python scripts/build-brand-assets.py` (developer-only dependency: Pillow). They are checked in; deployment does not require Python.
+
+Stadium images are delivered as WebP copies of the original PNG artwork. Run
+`python scripts/encode-stadium-assets.py` with Pillow to regenerate them; this
+developer utility is not part of deployment or the runtime container.
