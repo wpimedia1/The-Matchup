@@ -16,7 +16,7 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "test": "node --test",
-    "check": "node --check server/index.js && node --check server/api.js && node --check server/stats.js && node --check server/snapshots.js && node --check worker/index.js && node --check public/app.js && node --check public/matchup.js && node --check public/sample.js && node --check scripts/security-check.mjs",
+    "check": "node --check server/index.js && node --check server/pages.js && node --check server/routing.js && node --check public/site.js && node --check server/api.js && node --check server/stats.js && node --check server/snapshots.js && node --check worker/index.js && node --check public/app.js && node --check public/matchup.js && node --check public/sample.js && node --check scripts/security-check.mjs",
     "security:check": "node scripts/security-check.mjs",
     "build:cloudflare": "node scripts/build-cloudflare.mjs",
     "dev:cloudflare": "wrangler dev --port 4175",

@@ -12,7 +12,7 @@ export class HttpError extends Error {
 }
 export function json(status, body) {
   return new Response(JSON.stringify(body), { status, headers: { ...SECURITY_HEADERS,
-    'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
+    'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 }
 async function bodyJson(request) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) throw new HttpError(415, 'Send JSON content.');
