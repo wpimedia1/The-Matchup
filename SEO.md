@@ -7,17 +7,18 @@ Canonical site: https://the-matchup.app
 | League selection | https://the-matchup.app/ |
 | NBA dashboard | https://the-matchup.app/nba/ |
 | NFL dashboard | https://the-matchup.app/nfl/ |
+| MMA fight odds | https://the-matchup.app/mma/ |
 
-Node and Cloudflare share the page renderer and metadata definitions. All three
+Node and Cloudflare share the page renderer and metadata definitions. All four
 pages deliver useful HTML, a visible H1, descriptions, canonical URLs, social
 metadata and factual structured data before JavaScript. League dashboards load
 sample data initially; crawlers and page visits do not trigger paid odds calls.
-League navigation is progressively enhanced, retaining in-memory board state
+Navigation between NBA and NFL is progressively enhanced, retaining in-memory board state
 and updating metadata, breadcrumbs and browser history. Manual averages retain
 their existing localStorage keys. Browser storage does not migrate between
 different origins; averages previously saved on workers.dev stay on that origin.
 
-The sitemap contains only these three pages; sample events and UI filters have
+The sitemap contains only these four pages; sample events and UI filters have
 no separate indexable URLs. Unknown pages return HTTP 404 and noindex, not an
 app-shell 200. API responses use noindex and are disallowed in robots.txt;
 neither measure is authentication. Secret-file protection remains server-side.

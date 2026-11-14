@@ -22,7 +22,7 @@ test('all canonical pages ship distinct metadata, one H1, crawlable links and CS
     assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1);
     assert.ok(html.includes(page.heading.replaceAll('&', '&amp;')));
     assert.ok(html.includes(`rel="canonical" href="${ORIGIN}${page.path}"`));
-    assert.ok(html.includes('href="/nba/"')); assert.ok(html.includes('href="/nfl/"'));
+    assert.ok(html.includes('href="/nba/"')); assert.ok(html.includes('href="/nfl/"')); assert.ok(html.includes('href="/mma/"'));
     assert.doesNotMatch(html, /Against All Odds|AGAINST ALL ODDS|unsafe-inline/);
     const schema = html.match(/id="page-schema">([\s\S]*?)<\/script>/)[1];
     assert.deepEqual(JSON.parse(schema), JSON.parse(structuredData(key)));
@@ -35,7 +35,7 @@ test('all canonical pages ship distinct metadata, one H1, crawlable links and CS
     else assert.ok(html.includes(`data-league="${key}"`));
     assert.equal((await get(page.path, { method: 'HEAD' })).headers.get('content-type'), 'text/html; charset=utf-8');
   }
-  assert.equal(titles.size, 3); assert.equal(calls(), 0);
+  assert.equal(titles.size, 4); assert.equal(calls(), 0);
 });
 test('crawl files contain only canonical pages, while errors retain real statuses and noindex', async t => {
   const { get } = await site(t);
@@ -57,7 +57,7 @@ test('crawl files contain only canonical pages, while errors retain real statuse
 });
 test('canonical redirects preserve queries and methods without changing local hosts or trusting URL input', async t => {
   const { get } = await site(t);
-  for (const [path, expected] of [['/index.html', '/'], ['/nba', '/nba/'], ['/nfl.html', '/nfl/'], ['/nba/index.html?x=1', '/nba/?x=1']]) {
+  for (const [path, expected] of [['/mma.html?q=1', '/mma/?q=1'], ['/index.html', '/'], ['/nba', '/nba/'], ['/nfl.html', '/nfl/'], ['/nba/index.html?x=1', '/nba/?x=1']]) {
     const r = await get(path, { redirect: 'manual' }); assert.equal(r.status, 308); assert.equal(r.headers.get('location'), expected);
   }
   for (const source of ['http://the-matchup.app/nba?x=1', 'https://www.the-matchup.app/nba?x=1', 'https://the-matchup.wpimedia.workers.dev/nba?x=1']) {

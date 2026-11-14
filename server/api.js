@@ -1,3 +1,4 @@
+import { fightMarkets } from '../public/fight-markets.js';
 import { LEAGUES } from '../public/leagues.js';
 
 const REGIONS = new Set(['us', 'us2', 'uk', 'eu', 'au']);
@@ -47,10 +48,15 @@ export async function handleApi(request, { apiKey = '', fetchImpl = fetch, avera
       if (origin.host !== url.host) throw new HttpError(403, 'Cross-site requests are not allowed.');
     }
     if (path === '/api/health' && request.method === 'GET') return json(200, { status: 'ok', configured: Boolean(apiKey) });
-    const match = path.match(/^\/api\/(nba|nfl)\/(events|odds|averages|events\/([a-zA-Z0-9_-]{1,80})\/props)$/);
+    const match = path.match(/^\/api\/(nba|nfl|mma)\/(events|odds|averages|events\/([a-zA-Z0-9_-]{1,80})\/(?:props|markets))$/);
     if (!match) throw new HttpError(404, 'Unknown endpoint.');
     const league = LEAGUES[match[1]], action = match[2];
-    const allowedQuery = action.includes('/props') ? ['region', 'markets'] : action === 'odds' ? ['region'] : [];
+    const mma = match[1] === 'mma';
+    const fightDetail = action.endsWith('/markets');
+    if ((mma && (action === 'averages' || action.endsWith('/props'))) || (!mma && fightDetail)) {
+      throw new HttpError(404, 'Unknown endpoint.');
+    }
+    const allowedQuery = action.includes('/props') ? ['region', 'markets'] : (action === 'odds' || fightDetail) ? ['region'] : [];
     for (const key of url.searchParams.keys()) {
       if (!allowedQuery.includes(key) || url.searchParams.getAll(key).length !== 1) throw new HttpError(400, 'Unsupported query parameter.');
     }
@@ -66,18 +72,20 @@ export async function handleApi(request, { apiKey = '', fetchImpl = fetch, avera
     }
     if (request.method !== 'GET') throw new HttpError(405, 'Use GET for odds and events.');
     const region = url.searchParams.get('region') || 'us';
-    if (!REGIONS.has(region)) throw new HttpError(400, 'Invalid region.');
+    if (!REGIONS.has(region) && !(mma && region === 'all')) throw new HttpError(400, 'Invalid region.');
     let markets;
     if (action.includes('/props')) markets = checkMarkets(league, (url.searchParams.get('markets') || '').split(','));
     if (!apiKey) throw new HttpError(503, 'Live data is not configured on the server. Sample mode is available.');
     const endpoint = action === 'events' ? 'events' : action === 'odds' ? 'odds' : `events/${encodeURIComponent(match[3])}/odds`;
     const upstream = new URL('https://api.the-odds-api.com');
-    const sport = match[1] === 'nba' ? 'basketball_nba' : 'americanfootball_nfl';
+    const sport = { mma: 'mma_mixed_martial_arts', nba: 'basketball_nba', nfl: 'americanfootball_nfl' }[match[1]];
     upstream.pathname = `/v4/sports/${sport}/${endpoint}`;
     upstream.searchParams.set('apiKey', apiKey);
     if (action !== 'events') {
-      upstream.searchParams.set('regions', region);
-      upstream.searchParams.set('markets', markets ? markets.join(',') : 'h2h,spreads,totals');
+      upstream.searchParams.set('regions', region === 'all' ? [...REGIONS].join(',') : region);
+      const featured = mma ? 'h2h' : 'h2h,spreads,totals';
+      if (fightDetail) markets = Object.keys(fightMarkets);
+      upstream.searchParams.set('markets', markets ? markets.join(',') : featured);
       upstream.searchParams.set('oddsFormat', 'american');
     }
     let response;

@@ -11,10 +11,10 @@ if (await realpath(path.dirname(target)) !== path.join(root, 'dist')) throw new 
 if (target !== path.join(root, 'dist', 'cloudflare')) throw new Error('Build output is outside the project.');
 await rm(target, { recursive: true, force: true });
 await mkdir(new URL('assets/', output), { recursive: true });
-for (const file of ['app.js', 'styles.css', 'site.js', 'site.css', 'favicon.svg', 'domain.js', 'leagues.js', 'identities.js', 'sample.js', 'matchup.js']) {
+for (const file of ['fights.css', 'fights.js', 'fight-markets.js', 'app.js', 'styles.css', 'site.js', 'site.css', 'favicon.svg', 'domain.js', 'leagues.js', 'identities.js', 'sample.js', 'matchup.js']) {
   await copyFile(new URL(file, source), new URL(file, output));
 }
-for (const [file, key] of [['index.html', 'home'], ['nba/index.html', 'nba'], ['nfl/index.html', 'nfl'], ['404.html', '404']]) {
+for (const [file, key] of [['index.html', 'home'], ['mma/index.html', 'mma'], ['nba/index.html', 'nba'], ['nfl/index.html', 'nfl'], ['404.html', '404']]) {
   await mkdir(new URL('./', new URL(file, output)), { recursive: true });
   await writeFile(new URL(file, output), renderPage(key));
 }

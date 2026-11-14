@@ -12,13 +12,15 @@ export { HttpError } from './api.js';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const STATIC = new Map([
   ['/site.js', ['site.js', 'text/javascript']], ['/site.css', ['site.css', 'text/css']],
+  ['/fights.css', ['fights.css', 'text/css']],
+  ['/fights.js', ['fights.js', 'text/javascript']], ['/fight-markets.js', ['fight-markets.js', 'text/javascript']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
   ['/app.js', ['app.js', 'text/javascript']], ['/styles.css', ['styles.css', 'text/css']],
   ['/domain.js', ['domain.js', 'text/javascript']], ['/leagues.js', ['leagues.js', 'text/javascript']],
   ['/identities.js', ['identities.js', 'text/javascript']], ['/sample.js', ['sample.js', 'text/javascript']],
   ['/matchup.js', ['matchup.js', 'text/javascript']],
 ]);
-const pages = new Map([['/', renderPage('home')], ['/nba/', renderPage('nba')], ['/nfl/', renderPage('nfl')]]);
+const pages = new Map([['/mma/', renderPage('mma')], ['/', renderPage('home')], ['/nba/', renderPage('nba')], ['/nfl/', renderPage('nfl')]]);
 const resources = new Map([['/robots.txt', [ROBOTS, 'text/plain']], ['/sitemap.xml', [SITEMAP, 'application/xml']], ['/.well-known/security.txt', [SECURITY_TXT, 'text/plain']]]);
 const assetTypes = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', ttf: 'font/ttf', woff2: 'font/woff2' };
 for (const entry of await readdir(resolve(ROOT, 'public', 'assets'), { withFileTypes: true }).catch(() => [])) {
