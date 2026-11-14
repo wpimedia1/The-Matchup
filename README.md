@@ -3,9 +3,9 @@
 [![CI](https://github.com/wpimedia1/The-Matchup/actions/workflows/ci.yml/badge.svg)](https://github.com/wpimedia1/The-Matchup/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/wpimedia1/The-Matchup/actions/workflows/codeql.yml/badge.svg)](https://github.com/wpimedia1/The-Matchup/actions/workflows/codeql.yml)
 
-Open-source project: **The Matchup**. Live site: **https://the-matchup.app**. Choose a league on the homepage, or open `/nba/` and `/nfl/` directly.
+Open-source project: **The Matchup**. Live site: **https://the-matchup.app**. Choose a league on the homepage, or open `/nba/`, `/nfl/`, or `/mma/` directly.
 
-A combined NBA / NFL matchup website built from the two supplied dashboards. The selected option 3 design uses a navy league bar, horizontal scoreboard, stadium panorama, team-color matchup hero, and game lines beside player props. It includes last-10 averages, manual averages, filters, and the original explicit-load usage controls.
+NBA, NFL and MMA dashboards share a sports matchup homepage. The selected option 3 design uses a navy league bar, horizontal scoreboard, stadium panorama, team-color matchup hero, and game lines beside player props. It includes last-10 averages, manual averages, filters, and the original explicit-load usage controls.
 
 ## Run locally
 
@@ -48,6 +48,8 @@ Only explicit public application routes and allowlisted image/font files from `p
 | Endpoint | Behavior |
 | --- | --- |
 | `GET /api/health` | Readiness and whether live data is configured; never returns the key |
+| `GET /api/mma/odds` | MMA fight board with two-way winner prices. Accepts a bookmaker region or `all`. |
+| `GET /api/mma/events/:id/markets` | Winner, three-way result, double chance, main and alternate rounds, handicap and exchange lay prices for a fight. |
 | `GET /api/:league/events` | Schedule, where league is `nba` or `nfl` |
 | `GET /api/:league/odds?region=us` | Moneyline, spread, total |
 | `GET /api/:league/events/:id/props?region=us&markets=player_points` | Allowlisted league-specific prop markets |
@@ -89,7 +91,7 @@ Original code is [MIT licensed](LICENSE). See [third-party notices](THIRD_PARTY_
 
 ## Search and sharing
 
-The shared page renderer supplies unique titles, descriptions, canonical URLs, visible H1 headings, Open Graph/social-card metadata, and factual JSON-LD before JavaScript runs. `/robots.txt` references `/sitemap.xml`, which lists only the three public canonical pages. Unknown pages return a branded HTTP 404 with noindex; API errors stay JSON. `/.well-known/security.txt` points to private vulnerability reporting. See [SEO.md](SEO.md) for validation and Search Console setup.
+The shared page renderer supplies unique titles, descriptions, canonical URLs, visible H1 headings, Open Graph/social-card metadata, and factual JSON-LD before JavaScript runs. `/robots.txt` references `/sitemap.xml`, which lists only the four public canonical pages. Unknown pages return a branded HTTP 404 with noindex; API errors stay JSON. `/.well-known/security.txt` points to private vulnerability reporting. See [SEO.md](SEO.md) for validation and Search Console setup.
 
 The original typographic social preview and raster icons can be regenerated with `python scripts/build-brand-assets.py` (developer-only dependency: Pillow). They are checked in; deployment does not require Python.
 

@@ -1,9 +1,13 @@
 export const ORIGIN = 'https://the-matchup.app';
 export const PAGES = {
-  home: { path: '/', title: 'The Matchup — NBA & NFL Odds and Player Props',
-    heading: 'NBA & NFL Matchups, Odds and Player Props',
-    description: 'Explore NBA and NFL matchups with The Matchup. Compare game lines and player props at matching lines, then review recent player averages.',
-    intro: 'Know the matchup. Find your angle. Compare game lines and player props, explore recent form, and keep the numbers in perspective.' },
+  home: { path: '/', title: 'NBA, NFL & MMA Odds and Matchups — The Matchup',
+    heading: 'NBA, NFL & MMA Matchups and Odds',
+    description: 'Compare NBA and NFL game lines, player props and recent averages, plus MMA fight winners, round totals and bookmaker odds.',
+    intro: 'Explore NBA and NFL lines, player props and recent form, or compare MMA fight winners and round totals across bookmakers.' },
+  mma: { path: '/mma/', title: 'MMA Fight Odds, Winners & Round Totals — The Matchup',
+    heading: 'MMA Fight Odds and Round Totals',
+    description: 'Compare MMA fight winner odds, round totals, handicaps and exchange lay prices across bookmakers. Explore each available line for upcoming fights.',
+    intro: 'Compare mixed martial arts matchups by fighter, bookmaker and round line. Choose a region and load the fight board to see current odds.' },
   nba: { path: '/nba/', title: 'NBA Odds & Player Props — The Matchup',
     heading: 'NBA Matchups, Odds and Player Props',
     description: 'Compare NBA moneylines, spreads, totals and player props with The Matchup. Review points, rebounds, assists and last-10 averages alongside each line.',

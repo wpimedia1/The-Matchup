@@ -3,7 +3,7 @@
 Repository: https://github.com/wpimedia1/The-Matchup
 
 Production domain: `https://the-matchup.app`. Keep the frontend and `/api/*` on
-one HTTPS origin. The root is a league-selection homepage; `/nba/` and `/nfl/`
+one HTTPS origin. The root is a league-selection homepage; `/nba/`, `/nfl/` and `/mma/`
 serve the interactive dashboards.
 
 ## Node hosting
